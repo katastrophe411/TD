@@ -397,10 +397,14 @@ void SDynamicTableViewBase::Tick( const FGeometry& AllottedGeometry, const doubl
 
 void SDynamicTableViewBase::ScrollBar_OnUserScrolled( float InScrollOffsetFraction )
 {
-	const double ClampedScrollOffsetInItems = FMath::Clamp<double>( InScrollOffsetFraction, 0.0, 1.0 )* GetNumItemsBeingObserved();
-	ScrollTo( ClampedScrollOffsetInItems );
-}
+	const float ContentSize = GetTotalItemsLength();
+	const float ScrollPanelSize = GetCachedGeometry().GetLocalSize().Y;
 
+	//// Clamp to max scroll offset
+	const float ClampedScrollOffset = FMath::Min(InScrollOffsetFraction * ContentSize, ContentSize - ScrollPanelSize);
+
+	ScrollTo(ClampedScrollOffset);
+}
 
 FReply SDynamicTableViewBase::OnPreviewMouseButtonDown( const FGeometry& MyGeometry, const FPointerEvent& MouseEvent )
 {
@@ -791,7 +795,7 @@ SDynamicTableViewBase::SDynamicTableViewBase( ETableViewMode::Type InTableViewMo
 	, SelectionMode( ESelectionMode::Multi )
 	, SoftwareCursorPosition( ForceInitToZero )
 	, bShowSoftwareCursor( false )
-	, WheelScrollMultiplier(GetGlobalScrollAmount())
+	, WheelScrollMultiplier(1)
 	, BackgroundBrush(FStyleDefaults::GetNoBrush())
 	, bIsScrollingActiveTimerRegistered( false )
 	, Overscroll()
@@ -815,18 +819,19 @@ double SDynamicTableViewBase::GetTargetScrollOffset() const
 	return DesiredScrollOffset;
 }
 
-float SDynamicTableViewBase::ScrollBy(const FGeometry& MyGeometry, float ScrollByAmountInSlateUnits, EAllowOverscroll InAllowOverscroll)
+float SDynamicTableViewBase::ScrollBy(const FGeometry& MyGeometry, float ScrollByAmount, EAllowOverscroll InAllowOverscroll)
 {
-	// const int32 NumItemsBeingObserved = GetNumItemsBeingObserved();
-	// const float NumItemsBeingObserved = GetTotalItemsLength();
-	// const float FractionalScrollOffsetInItems = (DesiredScrollOffset + GetScrollRateInItems() * ScrollByAmountInSlateUnits) / NumItemsBeingObserved;
-	// const double ClampedScrollOffsetInItems = FMath::Clamp<double>( FractionalScrollOffsetInItems*NumItemsBeingObserved, -10.0f, NumItemsBeingObserved+10.0f ) * NumItemsBeingObserved;
-	// if (InAllowOverscroll == EAllowOverscroll::Yes)
-	// {
-	// 	Overscroll.ScrollBy(MyGeometry, ClampedScrollOffsetInItems - ScrollByAmountInSlateUnits );
-	// }
-	double ClampedScrollOffsetInItems = DesiredScrollOffset + GetScrollRateInItems() * ScrollByAmountInSlateUnits * 10;
-	return ScrollTo( ClampedScrollOffsetInItems );
+	const float ScrollMin = 0.0f;
+	const float ScrollMax = FMath::Max(GetTotalItemsLength() - MyGeometry.GetLocalSize().Y, 0.f);
+
+	if (InAllowOverscroll == EAllowOverscroll::Yes && Overscroll.ShouldApplyOverscroll(FMath::IsNearlyZero(DesiredScrollOffset), FMath::IsNearlyEqual(DesiredScrollOffset, ScrollMax), ScrollByAmount))
+	{
+		Overscroll.ScrollBy(MyGeometry, ScrollByAmount);
+	}
+
+	const float AvgItemLength = GetTotalItemsLength() / GetNumItemsBeingObserved();
+	const double ClampedScrollOffset = FMath::Clamp(DesiredScrollOffset + ScrollByAmount, ScrollMin - (AvgItemLength * 10.f), ScrollMax + (AvgItemLength * 10.f));
+	return ScrollTo(ClampedScrollOffset);
 }
 
 float SDynamicTableViewBase::ScrollTo( float InScrollOffset)

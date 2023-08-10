@@ -1281,14 +1281,6 @@ public:
 						}
 					}
 
-					// float FLength = ItemLength * FirstItemFraction;
-					
-					
-					
-					
-					
-					
-					
 					// The first item may not be fully visible (but cannot exceed 1)
 					// FirstItemFractionScrolledIntoView is the fraction of the item that is visible after taking into account anything that may be scrolled off the top/left of the list view
 					const float FirstItemFractionScrolledIntoView = 1.0f - (float)FMath::Max(DoubleFractional(CurrentScrollOffset), 0.0);
@@ -1519,21 +1511,21 @@ public:
 
 	virtual float GetFirstLineScrollOffset() const override
 	{
-		double SumOfItemLengths = 0;
+		double FirstLineScrollOffset = CurrentScrollOffset;
+
+		double AboveItemsLength = 0;
 		for (const float ItemLength : CachedItemLengths)
 		{
-			SumOfItemLengths += ItemLength;
+			AboveItemsLength += ItemLength;
 			
-			if (CurrentScrollOffset <= SumOfItemLengths && ItemLength > 0)
+			if (CurrentScrollOffset <= AboveItemsLength && ItemLength > 0)
 			{
-				double Return = ItemLength - (SumOfItemLengths - CurrentScrollOffset);
-				Return /= ItemLength;
-				
-				return Return;
+				FirstLineScrollOffset = (ItemLength - (AboveItemsLength - CurrentScrollOffset)) / ItemLength;
+				break;
 			}
 		}
 
-		return 0;
+		return FirstLineScrollOffset;
 	}
 
 	/**

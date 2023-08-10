@@ -137,7 +137,7 @@ TSharedRef<SWidget> UDynamicListViewBase::RebuildWidget()
 	MyTableViewBase->SetIsScrollAnimationEnabled(bEnableScrollAnimation);
 	MyTableViewBase->SetIsRightClickScrollingEnabled(bEnableRightClickScrolling);
 	MyTableViewBase->SetFixedLineScrollOffset(bEnableFixedLineOffset ? TOptional<double>(FixedLineScrollOffset) : TOptional<double>());
-	MyTableViewBase->SetWheelScrollMultiplier(GetGlobalScrollAmount() * WheelScrollMultiplier);
+	MyTableViewBase->SetWheelScrollMultiplier(WheelScrollMultiplier);
 
 	return MyTableViewBase.ToSharedRef();
 }
@@ -161,7 +161,7 @@ void UDynamicListViewBase::SynchronizeProperties()
 		MyTableViewBase->SetIsRightClickScrollingEnabled(bEnableRightClickScrolling);
 		MyTableViewBase->SetAllowOverscroll(AllowOverscroll ? EAllowOverscroll::Yes : EAllowOverscroll::No);
 		MyTableViewBase->SetFixedLineScrollOffset(bEnableFixedLineOffset ? TOptional<double>(FixedLineScrollOffset) : TOptional<double>());
-		MyTableViewBase->SetWheelScrollMultiplier(GetGlobalScrollAmount() * WheelScrollMultiplier);
+		MyTableViewBase->SetWheelScrollMultiplier(WheelScrollMultiplier);
 	}
 
 #if WITH_EDITORONLY_DATA
