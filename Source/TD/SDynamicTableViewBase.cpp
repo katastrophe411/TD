@@ -281,6 +281,13 @@ void SDynamicTableViewBase::Tick( const FGeometry& AllottedGeometry, const doubl
 
 		bool bPanelGeometryChanged = PanelGeometryLastTick.GetLocalSize() != PanelGeometry.GetLocalSize();
 		
+		if (bTotalItemLengthNeedRefresh || bPanelGeometryChanged)
+		{
+			PopulateTotalItemsLength(AllottedGeometry.GetAccumulatedLayoutTransform().GetScale());
+
+			bTotalItemLengthNeedRefresh = false;
+		}
+
 		if ( bItemsNeedRefresh || bPanelGeometryChanged)
 		{
 			PanelGeometryLastTick = PanelGeometry;
@@ -731,6 +738,8 @@ bool SDynamicTableViewBase::IsUserScrolling() const
 
 void SDynamicTableViewBase::RequestListRefresh()
 {
+	bTotalItemLengthNeedRefresh = true;
+
 	RequestLayoutRefresh();
 }
 

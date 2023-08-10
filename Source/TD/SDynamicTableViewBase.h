@@ -280,7 +280,7 @@ protected:
 	/** @return The total length along all item widgets */
 	virtual double GetTotalItemsLength() const = 0;
 
-	/** TODO TEMP */
+	/** populate and total items length */
 	virtual void PopulateTotalItemsLength(float LayoutScaleMultiplier) = 0;
 
 	/** @return how many items there are in the TArray being observed */
@@ -434,4 +434,7 @@ protected:
 private:
 	/** When true, a refresh should occur the next tick */
 	bool bItemsNeedRefresh = false;
+
+	/** When true, a populate total items length should occur the next tick */
+	bool bTotalItemLengthNeedRefresh = false;
 };

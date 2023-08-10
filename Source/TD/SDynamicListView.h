@@ -1203,8 +1203,6 @@ public:
 		// Clear all the items from our panel. We will re-add them in the correct order momentarily.
 		this->ClearWidgets();
 
-		PopulateTotalItemsLength(MyGeometry.GetAccumulatedLayoutTransform().GetScale()); // TODO Fix
-
 		// Ensure that we always begin and clean up a generation pass.
 		FGenerationPassGuard GenerationPassGuard(WidgetGenerator);
 
