@@ -2393,7 +2393,7 @@ protected:
 			return;
 		}
 		
-		for (ItemType CurItem : *ItemsSource)
+		for (ItemType CurItem : GetItems())
 		{
 			RowWidget->InitializeObjectRow_DynamicInternal(CurItem);
 			Private_OnEntryInitialized(CurItem, RowWidget.ToSharedRef());
