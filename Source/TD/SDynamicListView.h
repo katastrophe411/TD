@@ -2096,159 +2096,160 @@ protected:
 	{
 		OnFinishedScrolling.ExecuteIfBound();
 	}
-	//
-	// virtual float ScrollBy( const FGeometry& MyGeometry, float ScrollByAmountInSlateUnits, EAllowOverscroll InAllowOverscroll ) override
-	// {
-	// 	auto DoubleFractional = [](double Value) -> double
-	// 	{
-	// 		return Value - FMath::TruncToDouble(Value);
-	// 	};
-	//
-	// 	if (InAllowOverscroll == EAllowOverscroll::No)
-	// 	{
-	// 		//check if we are on the top of the list and want to scroll up
-	// 		if (DesiredScrollOffset < UE_KINDA_SMALL_NUMBER && ScrollByAmountInSlateUnits < 0)
-	// 		{
-	// 			return 0.0f;
-	// 		}
-	//
-	// 		//check if we are on the bottom of the list and want to scroll down
-	// 		if (bWasAtEndOfList && ScrollByAmountInSlateUnits > 0)
-	// 		{
-	// 			return 0.0f;
-	// 		}
-	// 	}
-	//
-	// 	float AbsScrollByAmount = FMath::Abs( ScrollByAmountInSlateUnits );
-	// 	int32 StartingItemIndex = (int32)CurrentScrollOffset;
-	// 	double NewScrollOffset = DesiredScrollOffset;
-	//
-	// 	const bool bWholeListVisible = DesiredScrollOffset == 0.0 && bWasAtEndOfList;
-	// 	if ( InAllowOverscroll == EAllowOverscroll::Yes && Overscroll.ShouldApplyOverscroll(DesiredScrollOffset == 0.0, bWasAtEndOfList, ScrollByAmountInSlateUnits ) )
-	// 	{
-	// 		const float UnclampedScrollDelta = FMath::Sign(ScrollByAmountInSlateUnits) * AbsScrollByAmount;				
-	// 		const float ActuallyScrolledBy = Overscroll.ScrollBy(MyGeometry, UnclampedScrollDelta);
-	// 		if (ActuallyScrolledBy != 0.0f)
-	// 		{
-	// 			this->RequestLayoutRefresh();
-	// 		}
-	// 		return ActuallyScrolledBy;
-	// 	}
-	// 	else if (!bWholeListVisible)
-	// 	{
-	// 		// We know how far we want to scroll in SlateUnits, but we store scroll offset in "number of widgets".
-	// 		// Challenge: each widget can be a different height/width.
-	// 		// Strategy:
-	// 		//           Scroll "one widget's length" at a time until we've scrolled as far as the user asked us to.
-	// 		//           Generate widgets on demand so we can figure out how big they are.
-	//
-	// 		const TArrayView<const ItemType> Items = GetItems();
-	// 		if (Items.Num() > 0)
-	// 		{
-	// 			int32 ItemIndex = StartingItemIndex;
-	// 			const float LayoutScaleMultiplier = MyGeometry.GetAccumulatedLayoutTransform().GetScale();
-	// 			while( AbsScrollByAmount != 0 && ItemIndex < Items.Num() && ItemIndex >= 0 )
-	// 			{
-	// 				const ItemType& CurItem = Items[ItemIndex];
-	// 				if (!TListTypeTraits<ItemType>::IsPtrValid(CurItem))
-	// 				{
-	// 					// If the CurItem is not valid, we do not generate a new widget for it, we skip it.
-	// 					++ItemIndex;
-	// 					continue;
-	// 				}
-	//
-	// 				TSharedPtr<ITableRow> RowWidget = WidgetGenerator.GetWidgetForItem( CurItem );
-	// 				if (!RowWidget.IsValid())
-	// 				{
-	// 					// We couldn't find an existing widgets, meaning that this data item was not visible before.
-	// 					// Make a new widget for it.
-	// 					RowWidget = this->GenerateNewWidget( CurItem );
-	//
-	// 					// It is useful to know the item's index that the widget was generated from.
-	// 					// Helps with even/odd coloring
-	// 					RowWidget->SetIndexInList(ItemIndex);
-	//
-	// 					// Let the item generator know that we encountered the current Item and associated Widget.
-	// 					WidgetGenerator.OnItemSeen( CurItem, RowWidget.ToSharedRef() );
-	//
-	// 					RowWidget->AsWidget()->SlatePrepass(LayoutScaleMultiplier);
-	// 				}
-	//
-	// 				const FTableViewDimensions WidgetDimensions(this->Orientation, RowWidget->AsWidget()->GetDesiredSize());
-	// 				if (ScrollByAmountInSlateUnits > 0)
-	// 				{
-	// 					const float RemainingDistance = WidgetDimensions.ScrollAxis * (float)(1.0 - DoubleFractional(NewScrollOffset));
-	//
-	// 					if (AbsScrollByAmount > RemainingDistance)
-	// 					{
-	// 						if (ItemIndex != Items.Num())
-	// 						{
-	// 							AbsScrollByAmount -= RemainingDistance;
-	// 							NewScrollOffset = 1.0 + (int32)NewScrollOffset;
-	// 							++ItemIndex;
-	// 						}
-	// 						else
-	// 						{
-	// 							NewScrollOffset = Items.Num();
-	// 							break;
-	// 						}
-	// 					} 
-	// 					else if ( AbsScrollByAmount == RemainingDistance)
-	// 					{
-	// 						NewScrollOffset = 1.0 + (int32)NewScrollOffset;
-	// 						break;
-	// 					}
-	// 					else
-	// 					{
-	// 						NewScrollOffset = (int32)NewScrollOffset + (1.0 - ((RemainingDistance - AbsScrollByAmount) / WidgetDimensions.ScrollAxis));
-	// 						break;
-	// 					}
-	// 				}
-	// 				else
-	// 				{
-	// 					float Fractional = FMath::Fractional( (float)NewScrollOffset );
-	// 					if ( FMath::IsNearlyEqual(Fractional, 0.f) )
-	// 					{
-	// 						Fractional = 1.0f;
-	// 						--NewScrollOffset;
-	// 					}
-	//
-	// 					const float PrecedingDistance = WidgetDimensions.ScrollAxis * Fractional;
-	//
-	// 					if ( AbsScrollByAmount > PrecedingDistance)
-	// 					{
-	// 						if ( ItemIndex != 0 )
-	// 						{
-	// 							AbsScrollByAmount -= PrecedingDistance;
-	// 							NewScrollOffset -= DoubleFractional( NewScrollOffset );
-	// 							--ItemIndex;
-	// 						}
-	// 						else
-	// 						{
-	// 							NewScrollOffset = 0.0;
-	// 							break;
-	// 						}
-	// 					} 
-	// 					else if ( AbsScrollByAmount == PrecedingDistance)
-	// 					{
-	// 						NewScrollOffset -= DoubleFractional( NewScrollOffset );
-	// 						break;
-	// 					}
-	// 					else
-	// 					{
-	// 						NewScrollOffset = float(FMath::TruncToInt32(NewScrollOffset)) + ((PrecedingDistance - AbsScrollByAmount) / WidgetDimensions.ScrollAxis);
-	// 						break;
-	// 					}
-	// 				}
-	// 			}
-	// 		}
-	//
-	//
-	// 		return ScrollTo( (float)NewScrollOffset );
-	// 	}
-	//
-	// 	return 0;
-	// }
+	/*
+	virtual float ScrollBy( const FGeometry& MyGeometry, float ScrollByAmountInSlateUnits, EAllowOverscroll InAllowOverscroll ) override
+	{
+		auto DoubleFractional = [](double Value) -> double
+		{
+			return Value - FMath::TruncToDouble(Value);
+		};
+	
+		if (InAllowOverscroll == EAllowOverscroll::No)
+		{
+			//check if we are on the top of the list and want to scroll up
+			if (DesiredScrollOffset < UE_KINDA_SMALL_NUMBER && ScrollByAmountInSlateUnits < 0)
+			{
+				return 0.0f;
+			}
+	
+			//check if we are on the bottom of the list and want to scroll down
+			if (bWasAtEndOfList && ScrollByAmountInSlateUnits > 0)
+			{
+				return 0.0f;
+			}
+		}
+	
+		float AbsScrollByAmount = FMath::Abs( ScrollByAmountInSlateUnits );
+		int32 StartingItemIndex = (int32)CurrentScrollOffset;
+		double NewScrollOffset = DesiredScrollOffset;
+	
+		const bool bWholeListVisible = DesiredScrollOffset == 0.0 && bWasAtEndOfList;
+		if ( InAllowOverscroll == EAllowOverscroll::Yes && Overscroll.ShouldApplyOverscroll(DesiredScrollOffset == 0.0, bWasAtEndOfList, ScrollByAmountInSlateUnits ) )
+		{
+			const float UnclampedScrollDelta = FMath::Sign(ScrollByAmountInSlateUnits) * AbsScrollByAmount;				
+			const float ActuallyScrolledBy = Overscroll.ScrollBy(MyGeometry, UnclampedScrollDelta);
+			if (ActuallyScrolledBy != 0.0f)
+			{
+				this->RequestLayoutRefresh();
+			}
+			return ActuallyScrolledBy;
+		}
+		else if (!bWholeListVisible)
+		{
+			// We know how far we want to scroll in SlateUnits, but we store scroll offset in "number of widgets".
+			// Challenge: each widget can be a different height/width.
+			// Strategy:
+			//           Scroll "one widget's length" at a time until we've scrolled as far as the user asked us to.
+			//           Generate widgets on demand so we can figure out how big they are.
+	
+			const TArrayView<const ItemType> Items = GetItems();
+			if (Items.Num() > 0)
+			{
+				int32 ItemIndex = StartingItemIndex;
+				const float LayoutScaleMultiplier = MyGeometry.GetAccumulatedLayoutTransform().GetScale();
+				while( AbsScrollByAmount != 0 && ItemIndex < Items.Num() && ItemIndex >= 0 )
+				{
+					const ItemType& CurItem = Items[ItemIndex];
+					if (!TListTypeTraits<ItemType>::IsPtrValid(CurItem))
+					{
+						// If the CurItem is not valid, we do not generate a new widget for it, we skip it.
+						++ItemIndex;
+						continue;
+					}
+	
+					TSharedPtr<ITableRow> RowWidget = WidgetGenerator.GetWidgetForItem( CurItem );
+					if (!RowWidget.IsValid())
+					{
+						// We couldn't find an existing widgets, meaning that this data item was not visible before.
+						// Make a new widget for it.
+						RowWidget = this->GenerateNewWidget( CurItem );
+	
+						// It is useful to know the item's index that the widget was generated from.
+						// Helps with even/odd coloring
+						RowWidget->SetIndexInList(ItemIndex);
+	
+						// Let the item generator know that we encountered the current Item and associated Widget.
+						WidgetGenerator.OnItemSeen( CurItem, RowWidget.ToSharedRef() );
+	
+						RowWidget->AsWidget()->SlatePrepass(LayoutScaleMultiplier);
+					}
+	
+					const FTableViewDimensions WidgetDimensions(this->Orientation, RowWidget->AsWidget()->GetDesiredSize());
+					if (ScrollByAmountInSlateUnits > 0)
+					{
+						const float RemainingDistance = WidgetDimensions.ScrollAxis * (float)(1.0 - DoubleFractional(NewScrollOffset));
+	
+						if (AbsScrollByAmount > RemainingDistance)
+						{
+							if (ItemIndex != Items.Num())
+							{
+								AbsScrollByAmount -= RemainingDistance;
+								NewScrollOffset = 1.0 + (int32)NewScrollOffset;
+								++ItemIndex;
+							}
+							else
+							{
+								NewScrollOffset = Items.Num();
+								break;
+							}
+						} 
+						else if ( AbsScrollByAmount == RemainingDistance)
+						{
+							NewScrollOffset = 1.0 + (int32)NewScrollOffset;
+							break;
+						}
+						else
+						{
+							NewScrollOffset = (int32)NewScrollOffset + (1.0 - ((RemainingDistance - AbsScrollByAmount) / WidgetDimensions.ScrollAxis));
+							break;
+						}
+					}
+					else
+					{
+						float Fractional = FMath::Fractional( (float)NewScrollOffset );
+						if ( FMath::IsNearlyEqual(Fractional, 0.f) )
+						{
+							Fractional = 1.0f;
+							--NewScrollOffset;
+						}
+	
+						const float PrecedingDistance = WidgetDimensions.ScrollAxis * Fractional;
+	
+						if ( AbsScrollByAmount > PrecedingDistance)
+						{
+							if ( ItemIndex != 0 )
+							{
+								AbsScrollByAmount -= PrecedingDistance;
+								NewScrollOffset -= DoubleFractional( NewScrollOffset );
+								--ItemIndex;
+							}
+							else
+							{
+								NewScrollOffset = 0.0;
+								break;
+							}
+						} 
+						else if ( AbsScrollByAmount == PrecedingDistance)
+						{
+							NewScrollOffset -= DoubleFractional( NewScrollOffset );
+							break;
+						}
+						else
+						{
+							NewScrollOffset = float(FMath::TruncToInt32(NewScrollOffset)) + ((PrecedingDistance - AbsScrollByAmount) / WidgetDimensions.ScrollAxis);
+							break;
+						}
+					}
+				}
+			}
+	
+	
+			return ScrollTo( (float)NewScrollOffset );
+		}
+	
+		return 0;
+	}
+	*/
 
 protected:
 
@@ -2372,7 +2373,7 @@ protected:
 		}
 	}
 
-	virtual void PopulateTotalItemsLength(float LayoutScaleMultiplier) override
+	virtual void ComputeTotalItemsLength(float LayoutScaleMultiplier) override
 	{
 		TotalItemsLength = 0.f;
 		CachedItemLengths.Empty();

@@ -197,20 +197,6 @@ protected:
 	 */
 	void ClearPinnedWidgets();
 
-	/**
-	 * Get the uniform item width.
-	 */
-	float GetItemWidth() const;
-
-	/**
-	 * Get the uniform item height that is enforced by ListViews.
-	 */
-	float GetItemHeight() const;
-
-	/**
-	* Get the uniform item
-	*/
-	UE::Slate::FDeprecateVector2DResult GetItemSize() const;
 
 	/** @return the number of items that can fit on the screen */
 	virtual float GetNumLiveWidgets() const;
@@ -281,7 +267,7 @@ protected:
 	virtual double GetTotalItemsLength() const = 0;
 
 	/** populate and total items length */
-	virtual void PopulateTotalItemsLength(float LayoutScaleMultiplier) = 0;
+	virtual void ComputeTotalItemsLength(float LayoutScaleMultiplier) = 0;
 
 	/** @return how many items there are in the TArray being observed */
 	virtual int32 GetNumItemsBeingObserved() const = 0;

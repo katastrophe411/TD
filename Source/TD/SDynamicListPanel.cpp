@@ -12,8 +12,6 @@ SDynamicListPanel::SDynamicListPanel()
 
 void SDynamicListPanel::Construct( const FArguments& InArgs )
 {
-	ItemWidth = InArgs._ItemWidth;
-	ItemHeight = InArgs._ItemHeight;
 	NumDesiredItems = InArgs._NumDesiredItems;
 	ItemAlignment = InArgs._ItemAlignment;
 	Orientation = InArgs._ListOrientation;
@@ -75,7 +73,6 @@ void SDynamicListPanel::OnArrangeChildren( const FGeometry& AllottedGeometry, FA
 	
 void SDynamicListPanel::Tick( const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime )
 {
-	PreferredNumLines = NumDesiredItems.Get();
 }
 
 FVector2D SDynamicListPanel::ComputeDesiredSize( float ) const
@@ -90,10 +87,7 @@ FVector2D SDynamicListPanel::ComputeDesiredSize( float ) const
 		DesiredListPanelDimensions.ScrollAxis += ChildDimensions.ScrollAxis;
 		DesiredListPanelDimensions.LineAxis = FMath::Max(DesiredListPanelDimensions.LineAxis, ChildDimensions.LineAxis);
 	}
-
-	DesiredListPanelDimensions.ScrollAxis /= Children.Num();
-
-	DesiredListPanelDimensions.ScrollAxis *= PreferredNumLines;
+	
 	return DesiredListPanelDimensions.ToVector2D();
 }
 
@@ -133,86 +127,6 @@ void SDynamicListPanel::ClearItems()
 	Children.Empty();
 }
 
-FTableViewDimensions SDynamicListPanel::GetDesiredItemDimensions() const
-{
-	return FTableViewDimensions(Orientation, ItemWidth.Get(), ItemHeight.Get());
-}
-
-float SDynamicListPanel::GetItemPadding(const FGeometry& AllottedGeometry) const
-{
-	return GetItemPadding(AllottedGeometry, ItemAlignment.Get());
-}
-
-float SDynamicListPanel::GetItemPadding(const FGeometry& AllottedGeometry, const EListItemAlignment ListItemAlignment) const
-{
-	if (ListItemAlignment == EListItemAlignment::EvenlyDistributed)
-	{
-		FTableViewDimensions AllottedDimensions(Orientation, AllottedGeometry.GetLocalSize());
-		FTableViewDimensions DesiredDimensions = GetDesiredItemDimensions();
-
-		// Only add padding between items if we have more total items that we can fit on a single line.  Otherwise,
-		// the padding around items would continue to change proportionately with the (ample) free space along the line axis
-		const int32 NumItemsPerLine = DesiredDimensions.LineAxis > 0.f ? FMath::FloorToInt(AllottedDimensions.LineAxis / DesiredDimensions.LineAxis) : 0;
-		
-		if (NumItemsPerLine > 0 && Children.Num() >= NumItemsPerLine)
-		{
-			return (AllottedDimensions.LineAxis - FloatingPointPrecisionOffset - (NumItemsPerLine * DesiredDimensions.LineAxis)) / NumItemsPerLine;
-		}
-	}
-
-	return 0.f;
-}
-
-FTableViewDimensions SDynamicListPanel::GetItemSize(const FGeometry& AllottedGeometry) const
-{
-	return GetItemSize(AllottedGeometry, ItemAlignment.Get());
-}
-
-FTableViewDimensions SDynamicListPanel::GetItemSize(const FGeometry& AllottedGeometry, const EListItemAlignment ListItemAlignment) const
-{
-	const FTableViewDimensions AllottedDimensions(Orientation, AllottedGeometry.GetLocalSize());
-	const FTableViewDimensions ItemDimensions = GetDesiredItemDimensions();
-
-	// Only add padding between items if we have more total items that we can fit on a single line.  Otherwise,
-	// the padding around items would continue to change proportionately with the (ample) free space in our minor axis
-	const int32 NumItemsPerLine = ItemDimensions.LineAxis > 0 ? FMath::FloorToInt(AllottedDimensions.LineAxis / ItemDimensions.LineAxis) : 0;
-
-	FTableViewDimensions ExtraDimensions(Orientation);
-	if (NumItemsPerLine > 0)
-	{
-		if (ListItemAlignment == EListItemAlignment::Fill || 
-			ListItemAlignment == EListItemAlignment::EvenlyWide || 
-			ListItemAlignment == EListItemAlignment::EvenlySize)
-		{
-			ExtraDimensions.LineAxis = (AllottedDimensions.LineAxis - FloatingPointPrecisionOffset - NumItemsPerLine * ItemDimensions.LineAxis) / NumItemsPerLine;
-			
-			if (ListItemAlignment == EListItemAlignment::EvenlySize)
-			{
-				ExtraDimensions.ScrollAxis = ItemDimensions.ScrollAxis * (ExtraDimensions.LineAxis / (ItemDimensions.LineAxis + ExtraDimensions.LineAxis));
-			}
-		}
-	}
-	
-	return ItemDimensions + ExtraDimensions;
-}
-
-float SDynamicListPanel::GetLinePadding(const FGeometry& AllottedGeometry, const int32 LineStartIndex) const
-{
-	const int32 NumItemsLeft = Children.Num() - LineStartIndex;
-	if(NumItemsLeft <= 0)
-	{
-		return 0.0f;
-	}
-
-	const FTableViewDimensions AllottedDimensions(Orientation, AllottedGeometry.GetLocalSize());
-	const FTableViewDimensions ItemSize = GetItemSize(AllottedGeometry);
-
-	const int32 MaxNumItemsOnLine = ItemSize.LineAxis > 0 ? FMath::FloorToInt(AllottedDimensions.LineAxis / ItemSize.LineAxis) : 0;
-	const int32 NumItemsOnLine = FMath::Min(NumItemsLeft, MaxNumItemsOnLine);
-
-	return AllottedDimensions.LineAxis - FloatingPointPrecisionOffset - (NumItemsOnLine * ItemSize.LineAxis);
-}
-
 void SDynamicListPanel::SetRefreshPending( bool IsPendingRefresh )
 {
 	bIsRefreshPending = IsPendingRefresh;
@@ -221,13 +135,4 @@ void SDynamicListPanel::SetRefreshPending( bool IsPendingRefresh )
 bool SDynamicListPanel::IsRefreshPending() const
 {
 	return bIsRefreshPending;
-}
-void SDynamicListPanel::SetItemHeight(TAttribute<float> Height)
-{
-	ItemHeight = Height;
-}
-
-void SDynamicListPanel::SetItemWidth(TAttribute<float> Width)
-{
-	ItemWidth = Width;
 }

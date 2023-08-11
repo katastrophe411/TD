@@ -64,16 +64,12 @@ void SDynamicTableViewBase::ConstructChildren( const TAttribute<float>& InItemWi
 
 	ItemsPanel = SNew(SDynamicListPanel)
 		.Clipping(GetClipping())
-		.ItemWidth(InItemWidth)
-		.ItemHeight(InItemHeight)
 		.NumDesiredItems(this, &SDynamicTableViewBase::GetNumItemsBeingObserved)
 		.ItemAlignment(InItemAlignment)
 		.ListOrientation(Orientation);
 
 	PinnedItemsPanel = SNew(SDynamicListPanel)
 		.Clipping(GetClipping())
-		.ItemWidth(InItemWidth)
-		.ItemHeight(InItemHeight)
 		.NumDesiredItems(this, &SDynamicTableViewBase::GetNumPinnedItems)
 		.ItemAlignment(InItemAlignment)
 		.ListOrientation(Orientation)
@@ -283,7 +279,7 @@ void SDynamicTableViewBase::Tick( const FGeometry& AllottedGeometry, const doubl
 		
 		if (bTotalItemLengthNeedRefresh || bPanelGeometryChanged)
 		{
-			PopulateTotalItemsLength(AllottedGeometry.GetAccumulatedLayoutTransform().GetScale());
+			ComputeTotalItemsLength(AllottedGeometry.GetAccumulatedLayoutTransform().GetScale());
 
 			bTotalItemLengthNeedRefresh = false;
 		}
@@ -835,12 +831,17 @@ float SDynamicTableViewBase::ScrollBy(const FGeometry& MyGeometry, float ScrollB
 
 	if (InAllowOverscroll == EAllowOverscroll::Yes && Overscroll.ShouldApplyOverscroll(FMath::IsNearlyZero(DesiredScrollOffset), FMath::IsNearlyEqual(DesiredScrollOffset, ScrollMax), ScrollByAmount))
 	{
-		Overscroll.ScrollBy(MyGeometry, ScrollByAmount);
+		const float ActuallyScrolledBy = Overscroll.ScrollBy(MyGeometry, ScrollByAmount);
+		if (ActuallyScrolledBy != 0.0f)
+		{
+			this->RequestLayoutRefresh();
+			return ActuallyScrolledBy;
+		}
 	}
 
-	const float AvgItemLength = GetTotalItemsLength() / GetNumItemsBeingObserved();
-	const double ClampedScrollOffset = FMath::Clamp(DesiredScrollOffset + ScrollByAmount, ScrollMin - (AvgItemLength * 10.f), ScrollMax + (AvgItemLength * 10.f));
-	return ScrollTo(ClampedScrollOffset);
+	// const float AvgItemLength = GetTotalItemsLength() / GetNumItemsBeingObserved();
+	// const double ClampedScrollOffset = FMath::Clamp(DesiredScrollOffset + ScrollByAmount, ScrollMin - (AvgItemLength * 10.f), ScrollMax + (AvgItemLength * 10.f));
+	return ScrollTo(DesiredScrollOffset + ScrollByAmount);
 }
 
 float SDynamicTableViewBase::ScrollTo( float InScrollOffset)
@@ -996,33 +997,6 @@ void SDynamicTableViewBase::ClearPinnedWidgets()
 	PinnedItemsPanel->ClearItems();
 }
 
-float SDynamicTableViewBase::GetItemWidth() const
-{
-	return GetItemSize().X;
-}
-
-float SDynamicTableViewBase::GetItemHeight() const
-{
-	return GetItemSize().Y;
-}
-
-UE::Slate::FDeprecateVector2DResult SDynamicTableViewBase::GetItemSize() const
-{
-	FTableViewDimensions ItemDimensions = ItemsPanel->GetItemSize(PanelGeometryLastTick);
-	ItemDimensions.LineAxis += ItemsPanel->GetItemPadding(PanelGeometryLastTick);
-	return ItemDimensions.ToVector2D();
-}
-
-void SDynamicTableViewBase::SetItemHeight(TAttribute<float> Height)
-{
-	ItemsPanel->SetItemHeight(Height);
-}
-
-void SDynamicTableViewBase::SetItemWidth(TAttribute<float> Width)
-{
-	ItemsPanel->SetItemWidth(Width);
-}
-
 float SDynamicTableViewBase::GetNumLiveWidgets() const
 {
 	return ItemsPanel->GetChildren()->Num();
@@ -1103,8 +1077,10 @@ void SDynamicTableViewBase::ScrollToTop()
 
 void SDynamicTableViewBase::ScrollToBottom()
 {
+	const float ScrollMax = GetTotalItemsLength() - GetCachedGeometry().GetLocalSize().Y;
+	
 	EndInertialScrolling();
-	SetScrollOffset(GetNumItemsBeingObserved());
+	SetScrollOffset(ScrollMax);
 	RequestLayoutRefresh();
 }
 

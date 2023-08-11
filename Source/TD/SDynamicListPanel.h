@@ -22,9 +22,7 @@ public:
 	FScopedWidgetSlotArguments AddSlot(int32 InsertAtIndex = INDEX_NONE);
 
 	SLATE_BEGIN_ARGS( SDynamicListPanel )
-		: _ItemWidth(0)
-		, _ItemHeight(16)
-		, _NumDesiredItems(0)
+		: _NumDesiredItems(0)
 		, _ItemAlignment(EListItemAlignment::EvenlyDistributed)
 		, _ListOrientation(Orient_Vertical)
 		{
@@ -33,8 +31,6 @@ public:
 		}
 		
 		SLATE_SLOT_ARGUMENT(FSlot, Slots)
-		SLATE_ATTRIBUTE( float, ItemWidth )
-		SLATE_ATTRIBUTE( float, ItemHeight )
 		SLATE_ATTRIBUTE( int32, NumDesiredItems )
 		SLATE_ATTRIBUTE( EListItemAlignment, ItemAlignment )
 		SLATE_ARGUMENT( EOrientation, ListOrientation )
@@ -69,47 +65,17 @@ public:
 	/** Remove all the children from this panel */
 	void ClearItems();
 
-	/** @return the uniform desired item dimensions used when arranging children. */
-	FTableViewDimensions GetDesiredItemDimensions() const;
-
-	/** @return the uniform item width used when arranging children. */
-	FTableViewDimensions GetItemSize(const FGeometry& AllottedGeometry) const;
-
-	/** @return the uniform item width used when arranging children. */
-	FTableViewDimensions GetItemSize(const FGeometry& AllottedGeometry, const EListItemAlignment ListItemAlignment) const;
-
-	/** @return the horizontal padding applied to each tile item */
-	float GetItemPadding(const FGeometry& AllottedGeometry) const;
-
-	/** @return the horizontal padding applied to each tile item */
-	float GetItemPadding(const FGeometry& AllottedGeometry, const EListItemAlignment ListItemAlignment) const;
-
-	/** @return the horizontal padding applied to all the items on a line */
-	float GetLinePadding(const FGeometry& AllottedGeometry, const int32 LineStartIndex) const;
-
 	/** Tells the list panel whether items in the list are pending a refresh */
 	void SetRefreshPending( bool IsPendingRefresh );
 
 	/** Returns true if this list panel is pending a refresh, false otherwise */
 	bool IsRefreshPending() const;
-
-	/** See ItemHeight attribute */
-	void SetItemHeight(TAttribute<float> Height);
-
-	/** See ItemWidth attribute */
-	void SetItemWidth(TAttribute<float> Width);
 	
 protected:
 
 	/** The children being arranged by this panel */
 	TPanelChildren<FSlot> Children;
-
-	/** The uniform item width used to arrange the children. Only relevant for tile views. */
-	TAttribute<float> ItemWidth;
 	
-	/** The uniform item height used to arrange the children */
-	TAttribute<float> ItemHeight;
-
 	/** Total number of items that the tree wants to visualize */
 	TAttribute<int32> NumDesiredItems;
 	
@@ -133,7 +99,4 @@ protected:
 
 	/** Overall orientation of the list for layout and scrolling. Only relevant for tile views. */
 	EOrientation Orientation;
-
-	/** The preferred number of lines that this widget should have orthogonal to the scroll axis. Only relevant for tile views. */
-	int32 PreferredNumLines = 1;
 };
